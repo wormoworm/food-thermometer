@@ -11,11 +11,13 @@
 #include "MqttCommandRequest.h"
 #include "ChannelSelectClient.h"
 #include "TemperatureDisplayClient.h"
+#include "DataReportingClient.h"
+#include "MathUtils.h"
 
 // Base config. TODO: Some of this needs to be settable via MQTT.
 int temperatureSmoothing = 50;
 int samplingIntervalMs = 20;
-int reportingIntervalMs = 1000;
+int temperatureReportingIntervalMs = 1000;
 // SteinhartHartCoefficients shCoefficientsSalterProbe = { 1.579665719e-03, 1.093362615e-04, 3.288101479e-07 };
 
 // Storage allows us to persist config data in flash.
@@ -27,6 +29,9 @@ ChannelSelectClient *channelSelectClient;
 // Handles displaying of temperature data, including formatting and placeholder values.
 TemperatureDisplayClient *temperatureDisplayClient;
 
+// Handles publication of data.
+DataReportingClient *dataReportingClient;
+
 WiFiClient espClient;
 SensorToolkitMqtt mqttClient = SensorToolkitMqtt(espClient, CONFIG_MQTT_BROKER_ADDRESS, CONFIG_MQTT_BROKER_PORT, CONFIG_MQTT_CLIENT_ID);
 DFRobot_LedDisplayModule ledDisplay(Wire, 0x48);
@@ -34,16 +39,7 @@ DFRobot_LedDisplayModule ledDisplay(Wire, 0x48);
 TemperatureClient temperatureChannel1 = TemperatureClient(PIN_CHANNEL_1_VALUE, PIN_CHANNEL_1_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_1, temperatureSmoothing);
 TemperatureClient temperatureChannel2 = TemperatureClient(PIN_CHANNEL_2_VALUE, PIN_CHANNEL_2_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_2, temperatureSmoothing);
 
-char jsonOutput[200];
-
-// void initialiseLedDisplay() {
-//     /*Wait for the chip to be initialized completely, and then exit*/
-//   while(ledDisplay.begin4() != 0) {
-//     Serial.println("Failed to initialize the chip, please confirm the chip connection!");
-//     delay(1000);
-//   }
-//   ledDisplay.setDisplayArea4(1,2,3,4);
-// }
+unsigned long lastTemperatureReportTimestampMs = 0;
 
 void flashLed() {
     digitalWrite(LED_BUILTIN, HIGH);
@@ -107,19 +103,6 @@ void initialiseMqtt() {
     mqttClient.setCallback(mqttSubscriptionCallback);
     mqttClient.connect(MQTT_USERNAME, MQTT_PASSWORD, CONFIG_MQTT_KEEP_ALIVE);
     subscribeToMqttTopics();
-    mqttClient.subscribe("sensors/environment/foodthermometer/channel/one/config");
-}
-
-void publishData(double temperature) {
-    StaticJsonDocument<200> json;
-    
-    json["temperature"] = temperature;
-
-    Serial.println("-----");
-    serializeJsonPretty(json, Serial);
-    serializeJson(json, jsonOutput);
-    
-    mqttClient.publish("sensors/environment/foodthermometer/channel/one/data", jsonOutput);
 }
 
 void setup() {
@@ -130,13 +113,17 @@ void setup() {
     storage = new Storage();
     channelSelectClient = new ChannelSelectClient(PIN_CHANNEL_SELECT_1, PIN_CHANNEL_SELECT_2);
     temperatureDisplayClient = new TemperatureDisplayClient(ADDRESS_DISPLAY);
+    dataReportingClient = new DataReportingClient(mqttClient);
 
     // Connect to Wifi.
     connectToWifi(WIFI_SSID, WIFI_PASSWORD, true);
+    // Connect to MQTT.
     initialiseMqtt();
 }
 
 void loop() {
+    unsigned long timeMs = millis();
+
     // 1: Delay by sampling interval.
     delay(samplingIntervalMs);
 
@@ -158,21 +145,16 @@ void loop() {
     }
 
     // 4: Publish data if publish interval exceeded.
+    if ((timeMs - lastTemperatureReportTimestampMs) > temperatureReportingIntervalMs) {
+        if (temperatureChannel1.isProbeConnected()) {
+            dataReportingClient->reportSensorData(ONE, roundDouble(temperatureChannel1.getSmoothedTemperature(), 1));
+        }
+        if (temperatureChannel2.isProbeConnected()) {
+            dataReportingClient->reportSensorData(TWO, roundDouble(temperatureChannel2.getSmoothedTemperature(), 1));
+        }
+        lastTemperatureReportTimestampMs = timeMs;
+    }
 
-    ///////////////////
-
-    // for(int i=0; i<temperatureSmoothing; i++) {
-    //     temperatureChannel1.sampleTemperature();
-    //     delay(samplingIntervalMs);
-    // }
-    // Serial.print("Ch1 probe connected: ");
-    // Serial.println(temperatureChannel1.isProbeConnected());
-
-    // double temperature = roundDouble(temperatureChannel1.getSmoothedTemperature(), 1);
-
-    // publishData(temperature);
-    // displayTemperature(123);
-
-    // delay(reportingIntervalMs);
+    // 5: Allow the MQTT client to perform any operations it needs to.
     mqttClient.loop();
 }

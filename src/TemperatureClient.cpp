@@ -1,11 +1,12 @@
 #include "TemperatureClient.h"
 #include "TemperatureClientConfig.h"
+#include "AdcCalibrationData.h"
 
 TemperatureClient::TemperatureClient(uint8_t pinAdc, uint8_t pinPrescence, uint32_t dividerResistance, size_t smoothing) : _buffer{smoothing} {
     _pinAdc = pinAdc;
     _pinPrescence = pinPrescence;
     _dividerResistance = dividerResistance;
-    _config = TemperatureClientConfig { .c1 = 1.5e-03, .c2 = 1.1e-04, .c3 = 3.2e-07 };
+    setConfig(TemperatureClientConfig { .c1 = 0.5821988606e-03, .c2 = 2.340232619e-04, .c3 = 0.7021977442e-07 });
     pinMode(_pinAdc, INPUT);
     pinMode(_pinPrescence, INPUT);
 }
@@ -40,7 +41,7 @@ float TemperatureClient::getSmoothedTemperature() {
 }
 
 float TemperatureClient::getThermistorResistance() {
-    uint16_t rawValue = analogRead(_pinAdc);
+    uint16_t rawValue = (uint16_t) ADC_LUT[analogRead(_pinAdc)];
     return _dividerResistance * ((4096.0 / (float) rawValue) - 1.0);
 }
 

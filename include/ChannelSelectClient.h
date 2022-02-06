@@ -3,15 +3,7 @@
 
 #include <Arduino.h>
 
-#define CHANNEL_NOT_SELECTED -1
-#define CHANNEL_1 -1
-#define CHANNEL_NOT_SELECTED -1
-
-enum Channel {
-    NONE = 0,
-    ONE = 1,
-    TWO = 2
-};
+#include "Channel.h"
 
 class ChannelSelectClient {
 
