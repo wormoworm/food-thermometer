@@ -4,25 +4,28 @@
 #include <SmoothingBuffer.h>
 #include <SensorToolkitWifi.h>
 #include <SensorToolkitMqtt.h>
+
 #include "TemperatureClient.h"
 #include "config.h"
 #include "Storage.h"
 #include "MqttCommandRequest.h"
+#include "ChannelSelectClient.h"
+#include "TemperatureDisplayClient.h"
 
 // Base config. TODO: Some of this needs to be settable via MQTT.
-int temperatureSmoothing = 20;
-int samplingIntervalMs = 10;
+int temperatureSmoothing = 50;
+int samplingIntervalMs = 20;
 int reportingIntervalMs = 1000;
 // SteinhartHartCoefficients shCoefficientsSalterProbe = { 1.579665719e-03, 1.093362615e-04, 3.288101479e-07 };
 
-// Channel one config
-int thermistorPinChannel1 = A1;
-
-// Channel two config. TODO: This is just a clone of channel 1 for now.
-int thermistorPinChannel2 = A1;
-
 // Storage allows us to persist config data in flash.
 Storage *storage;
+
+// Handles checking of the channel select SPDT switch.
+ChannelSelectClient *channelSelectClient;
+
+// Handles displaying of temperature data, including formatting and placeholder values.
+TemperatureDisplayClient *temperatureDisplayClient;
 
 WiFiClient espClient;
 SensorToolkitMqtt mqttClient = SensorToolkitMqtt(espClient, CONFIG_MQTT_BROKER_ADDRESS, CONFIG_MQTT_BROKER_PORT, CONFIG_MQTT_CLIENT_ID);
@@ -33,18 +36,14 @@ TemperatureClient temperatureChannel2 = TemperatureClient(PIN_CHANNEL_2_VALUE, P
 
 char jsonOutput[200];
 
-void initialiseLedDisplay() {
-    /*Wait for the chip to be initialized completely, and then exit*/
-  while(ledDisplay.begin4() != 0) {
-    Serial.println("Failed to initialize the chip, please confirm the chip connection!");
-    delay(1000);
-  }
-  ledDisplay.setDisplayArea4(1,2,3,4);
-}
-
-void displayTemperature(double temperature) {
-    ledDisplay.print4(temperature);
-}
+// void initialiseLedDisplay() {
+//     /*Wait for the chip to be initialized completely, and then exit*/
+//   while(ledDisplay.begin4() != 0) {
+//     Serial.println("Failed to initialize the chip, please confirm the chip connection!");
+//     delay(1000);
+//   }
+//   ledDisplay.setDisplayArea4(1,2,3,4);
+// }
 
 void flashLed() {
     digitalWrite(LED_BUILTIN, HIGH);
@@ -123,36 +122,57 @@ void publishData(double temperature) {
     mqttClient.publish("sensors/environment/foodthermometer/channel/one/data", jsonOutput);
 }
 
-double roundDouble(double value, int places) {
-    int factor = pow(10, places);
-    return ((int) ((value * factor) + 0.5)) / (double) factor;
-}
-
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
+
+    // Initialise the various long-lived clients we need.
     storage = new Storage();
-    
-    initialiseLedDisplay();
+    channelSelectClient = new ChannelSelectClient(PIN_CHANNEL_SELECT_1, PIN_CHANNEL_SELECT_2);
+    temperatureDisplayClient = new TemperatureDisplayClient(ADDRESS_DISPLAY);
+
+    // Connect to Wifi.
     connectToWifi(WIFI_SSID, WIFI_PASSWORD, true);
     initialiseMqtt();
 }
 
 void loop() {
-    flashLed();
+    // 1: Delay by sampling interval.
+    delay(samplingIntervalMs);
 
-    for(int i=0; i<temperatureSmoothing; i++) {
-        temperatureChannel1.sampleTemperature();
-        delay(samplingIntervalMs);
+    // 2: Sample both channels.
+    temperatureChannel1.sampleTemperature();
+    temperatureChannel2.sampleTemperature();
+
+    // 3: Display selected temperature on screen.
+    switch (channelSelectClient->getSelectedChannel()) {
+        case ONE:
+            temperatureDisplayClient->displayTemperature(temperatureChannel1.getSmoothedTemperature());
+            break;
+        case TWO:
+            temperatureDisplayClient->displayTemperature(temperatureChannel2.getSmoothedTemperature());
+            break;
+        default:
+            temperatureDisplayClient->displayOff();
+            break;
     }
-    Serial.print("Ch1 probe connected: ");
-    Serial.println(temperatureChannel1.isProbeConnected());
 
-    double temperature = roundDouble(temperatureChannel1.getSmoothedTemperature(), 1);
+    // 4: Publish data if publish interval exceeded.
 
-    publishData(temperature);
-    displayTemperature(123);
+    ///////////////////
 
-    delay(reportingIntervalMs);
+    // for(int i=0; i<temperatureSmoothing; i++) {
+    //     temperatureChannel1.sampleTemperature();
+    //     delay(samplingIntervalMs);
+    // }
+    // Serial.print("Ch1 probe connected: ");
+    // Serial.println(temperatureChannel1.isProbeConnected());
+
+    // double temperature = roundDouble(temperatureChannel1.getSmoothedTemperature(), 1);
+
+    // publishData(temperature);
+    // displayTemperature(123);
+
+    // delay(reportingIntervalMs);
     mqttClient.loop();
 }

@@ -18,15 +18,25 @@ boolean TemperatureClient::isProbeConnected() {
     return digitalRead(_pinPrescence) == LOW;
 }
 
-float TemperatureClient::sampleTemperature() {
-    float resistance = getThermistorResistance();
-    float temperature = calculateTemperature(resistance);
-    _buffer.storeValue(temperature);
-    return temperature;
+boolean TemperatureClient::sampleTemperature() {
+    if (isProbeConnected()) {
+        float resistance = getThermistorResistance();
+        float temperature = calculateTemperature(resistance);
+        _buffer.storeValue(temperature);
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 float TemperatureClient::getSmoothedTemperature() {
-    return _buffer.getAverage();
+    if (isProbeConnected()) {
+        return _buffer.getAverage();
+    }
+    else{
+        return TEMPERATURE_NOT_AVAILABLE;
+    }
 }
 
 float TemperatureClient::getThermistorResistance() {

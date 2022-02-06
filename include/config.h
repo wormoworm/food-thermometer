@@ -12,6 +12,9 @@
 #define PIN_CHANNEL_SELECT_1 13
 #define PIN_CHANNEL_SELECT_2 14
 
+// I2C address of the 4-digit LED display.
+#define ADDRESS_DISPLAY 0x48
+
 // Divider resistor values, used to scale voltages into ADC range.
 #define DIVIDER_RESISTANCE_CHANNEL_1 99400
 #define DIVIDER_RESISTANCE_CHANNEL_2 99100

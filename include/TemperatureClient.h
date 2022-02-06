@@ -4,6 +4,8 @@
 #include <SmoothingBuffer.h>
 #include "TemperatureClientConfig.h"
 
+#define TEMPERATURE_NOT_AVAILABLE 999
+
 class TemperatureClient {
 
     public:
@@ -13,7 +15,7 @@ class TemperatureClient {
 
         boolean isProbeConnected();
 
-        float sampleTemperature();
+        boolean sampleTemperature();
 
         float getSmoothedTemperature();
 
