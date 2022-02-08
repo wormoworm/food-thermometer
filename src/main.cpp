@@ -72,7 +72,6 @@ JsonObject decodeJsonObject(byte* payload, unsigned int length) {
 }
 
 void wifiConnectionTickCallback(uint16_t tickNumber) {
-    Serial.print("Tick number: ");
     Serial.println(tickNumber);
     temperatureDisplayClient->displayCharacters(loadingCharacters[tickNumber % 4], loadingCharacters[(tickNumber + 1) % 4], loadingCharacters[(tickNumber + 2) % 4], loadingCharacters[(tickNumber + 3) % 4]);
 }
