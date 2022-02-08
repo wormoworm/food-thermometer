@@ -11,7 +11,7 @@ class DataReportingClient {
     public:
         DataReportingClient(SensorToolkitMqtt& mqttClient);
 
-        boolean reportSensorData(Channel channel, double temperature);
+        boolean reportSensorData(Channel channel, unsigned long timestamp, double temperature);
 
     private:
 

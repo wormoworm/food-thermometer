@@ -8,14 +8,15 @@ DataReportingClient::DataReportingClient(SensorToolkitMqtt& mqttClient){
     _mqttClient = &mqttClient;
 }
 
-boolean DataReportingClient::reportSensorData(Channel channel, double temperature) {
+boolean DataReportingClient::reportSensorData(Channel channel, unsigned long timestamp, double temperature) {
     // Assemble the message to be sent.
     StaticJsonDocument<200> json;
     
+    json["timestamp"] = timestamp;
     json["temperature"] = temperature;
 
-    Serial.println("-----");
     serializeJsonPretty(json, Serial);
+    Serial.println();
     serializeJson(json, _jsonOutput);
     
     // Publish the data on the topic that corresponds to the Channel provided.

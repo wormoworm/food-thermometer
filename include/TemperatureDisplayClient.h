@@ -24,6 +24,8 @@ class TemperatureDisplayClient {
 
         void displayTemperature(double temperature);
 
+        void displayCharacters(const char char1[3],const char char2[3],const char char3[3],const char char4[3]);
+
     private:
 
         uint8_t _address;

@@ -1,9 +1,10 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <DFRobot_LedDisplayModule.h>
 #include <SmoothingBuffer.h>
 #include <SensorToolkitWifi.h>
 #include <SensorToolkitMqtt.h>
+#include <SensorToolkitTime.h>
+#include <time.h>
 
 #include "TemperatureClient.h"
 #include "config.h"
@@ -13,6 +14,8 @@
 #include "TemperatureDisplayClient.h"
 #include "DataReportingClient.h"
 #include "MathUtils.h"
+
+const char loadingCharacters[4][3] = {"1", "-", "-", "-"};
 
 // Base config. TODO: Some of this needs to be settable via MQTT.
 int temperatureSmoothing = 50;
@@ -33,8 +36,8 @@ TemperatureDisplayClient *temperatureDisplayClient;
 DataReportingClient *dataReportingClient;
 
 WiFiClient espClient;
+SensorToolkitWifi *wifiClient;
 SensorToolkitMqtt mqttClient = SensorToolkitMqtt(espClient, CONFIG_MQTT_BROKER_ADDRESS, CONFIG_MQTT_BROKER_PORT, CONFIG_MQTT_CLIENT_ID);
-DFRobot_LedDisplayModule ledDisplay(Wire, 0x48);
 
 TemperatureClient temperatureChannel1 = TemperatureClient(PIN_CHANNEL_1_VALUE, PIN_CHANNEL_1_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_1, temperatureSmoothing);
 TemperatureClient temperatureChannel2 = TemperatureClient(PIN_CHANNEL_2_VALUE, PIN_CHANNEL_2_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_2, temperatureSmoothing);
@@ -68,6 +71,12 @@ JsonObject decodeJsonObject(byte* payload, unsigned int length) {
     return json.as<JsonObject>();
 }
 
+void wifiConnectionTickCallback(uint16_t tickNumber) {
+    Serial.print("Tick number: ");
+    Serial.println(tickNumber);
+    temperatureDisplayClient->displayCharacters(loadingCharacters[tickNumber % 4], loadingCharacters[(tickNumber + 1) % 4], loadingCharacters[(tickNumber + 2) % 4], loadingCharacters[(tickNumber + 3) % 4]);
+}
+
 /**
  * @brief Callback that is invoked whenever a message is received on a topic that the MQTT client is subscribed to.
  * 
@@ -99,12 +108,6 @@ void subscribeToMqttTopics() {
     mqttClient.subscribe(TOPIC_CHANNEL_2_CONFIG);
 }
 
-void initialiseMqtt() {
-    mqttClient.setCallback(mqttSubscriptionCallback);
-    mqttClient.connect(MQTT_USERNAME, MQTT_PASSWORD, CONFIG_MQTT_KEEP_ALIVE);
-    subscribeToMqttTopics();
-}
-
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
@@ -114,11 +117,17 @@ void setup() {
     channelSelectClient = new ChannelSelectClient(PIN_CHANNEL_SELECT_1, PIN_CHANNEL_SELECT_2);
     temperatureDisplayClient = new TemperatureDisplayClient(ADDRESS_DISPLAY);
     dataReportingClient = new DataReportingClient(mqttClient);
+    wifiClient = new SensorToolkitWifi();
 
     // Connect to Wifi.
-    connectToWifi(WIFI_SSID, WIFI_PASSWORD, true);
+    wifiClient->setConnectionTickCallback(wifiConnectionTickCallback);
+    wifiClient->connectToWifi(WIFI_SSID, WIFI_PASSWORD, true);
+    // Sync time from NTP server.
+    syncNtp(0, 3600, "pool.ntp.org", true);
     // Connect to MQTT.
-    initialiseMqtt();
+    mqttClient.setCallback(mqttSubscriptionCallback);
+    mqttClient.connect(MQTT_USERNAME, MQTT_PASSWORD, CONFIG_MQTT_KEEP_ALIVE);
+    subscribeToMqttTopics();
 }
 
 void loop() {
@@ -147,10 +156,10 @@ void loop() {
     // 4: Publish data if publish interval exceeded.
     if ((timeMs - lastTemperatureReportTimestampMs) > temperatureReportingIntervalMs) {
         if (temperatureChannel1.isProbeConnected()) {
-            dataReportingClient->reportSensorData(ONE, roundDouble(temperatureChannel1.getSmoothedTemperature(), 1));
+            dataReportingClient->reportSensorData(ONE, getEpochTime(), roundDouble(temperatureChannel1.getSmoothedTemperature(), 1));
         }
         if (temperatureChannel2.isProbeConnected()) {
-            dataReportingClient->reportSensorData(TWO, roundDouble(temperatureChannel2.getSmoothedTemperature(), 1));
+            dataReportingClient->reportSensorData(TWO, getEpochTime(), roundDouble(temperatureChannel2.getSmoothedTemperature(), 1));
         }
         lastTemperatureReportTimestampMs = timeMs;
     }

@@ -63,10 +63,6 @@ void TemperatureDisplayClient::displayTemperature(double temperature) {
         }
         
         int stringLength = strlen(_displayString);
-        // Serial.print("Display string: ");
-        // Serial.println(_displayString);
-        // Serial.print("Display string length: ");
-        // Serial.println(strlen(_displayString));
 
         char displayCharacters[4][3];
         int stringPointer = 0;
@@ -114,6 +110,11 @@ void TemperatureDisplayClient::displayTemperature(double temperature) {
             break;
         }
     }
+}
+
+void TemperatureDisplayClient::displayCharacters(const char char1[3],const char char2[3],const char char3[3],const char char4[3]) {
+    _display->setDisplayArea4(1, 2, 3, 4);
+    _display->print4(char1, char2, char3, char4);
 }
 
 double TemperatureDisplayClient::formatTemperatureValue(double temperature) {
