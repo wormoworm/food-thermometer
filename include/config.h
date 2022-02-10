@@ -19,6 +19,9 @@
 #define DIVIDER_RESISTANCE_CHANNEL_1 99400
 #define DIVIDER_RESISTANCE_CHANNEL_2 99100
 
+// Minimum time between consecutive ADC samples. Some reports online suggest this can help with noise.
+#define MIN_ADC_SAMPLING_INTERVAL_MS 5
+
 // For MQTT broker connection.
 #define CONFIG_MQTT_BROKER_ADDRESS "10.0.1.2"
 #define CONFIG_MQTT_BROKER_PORT 8884

@@ -30,9 +30,7 @@ void TemperatureDisplayClient::displayTemperature(double temperature) {
     _display->displayOn();
 
     if (temperature == TEMPERATURE_NOT_AVAILABLE) {
-        // Set the display to show all four digits for the placeholder.
-        _display->setDisplayArea4(1, 2, 3, 4);
-        _display->print4("-", "-", "-", "-");
+        displayNoTemperature();
     }
     else {
         // 1: Calculate how much precision we can display, based on the precision requested and the value.
@@ -110,6 +108,12 @@ void TemperatureDisplayClient::displayTemperature(double temperature) {
             break;
         }
     }
+}
+
+void TemperatureDisplayClient::displayNoTemperature() {
+     // Set the display to show all four digits for the placeholder.
+    _display->setDisplayArea4(1, 2, 3, 4);
+    _display->print4("-", "-", "-", "-");
 }
 
 void TemperatureDisplayClient::displayCharacters(const char char1[3],const char char2[3],const char char3[3],const char char4[3]) {

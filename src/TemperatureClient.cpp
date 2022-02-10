@@ -22,7 +22,11 @@ boolean TemperatureClient::isProbeConnected() {
 boolean TemperatureClient::sampleTemperature() {
     if (isProbeConnected()) {
         float resistance = getThermistorResistance();
+        // Serial.print("Resistance: ");
+        // Serial.println(resistance);
         float temperature = calculateTemperature(resistance);
+        // Serial.print("Temperature: ");
+        // Serial.println(temperature);
         _buffer.storeValue(temperature);
         return true;
     }
@@ -41,7 +45,7 @@ float TemperatureClient::getSmoothedTemperature() {
 }
 
 float TemperatureClient::getThermistorResistance() {
-    uint16_t rawValue = (uint16_t) ADC_LUT[analogRead(_pinAdc)];
+    uint16_t rawValue = analogRead(_pinAdc);
     return _dividerResistance * ((4096.0 / (float) rawValue) - 1.0);
 }
 
