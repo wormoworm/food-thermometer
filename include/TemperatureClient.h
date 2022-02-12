@@ -1,6 +1,7 @@
 #ifndef TemperatureClient_H
 #define TemperatureClient_H
 
+#include "esp_adc_cal.h"
 #include <SmoothingBuffer.h>
 #include "TemperatureClientConfig.h"
 
@@ -29,6 +30,8 @@ class TemperatureClient {
         uint32_t _dividerResistance;
         SmoothingBuffer _buffer;
         TemperatureClientConfig _config;
+
+        esp_adc_cal_characteristics_t _adc_chars;
 };
 
 #endif

@@ -18,8 +18,8 @@
 const char loadingCharacters[4][3] = {"1", "-", "-", "-"};
 
 // Base config. TODO: Some of this needs to be settable via MQTT.
-int temperatureSmoothing = 50;
-int samplingIntervalMs = 20;
+int temperatureSmoothing = 5;
+int samplingIntervalMs = 200;
 int dataReportingIntervalMs = 1000;
 // SteinhartHartCoefficients shCoefficientsSalterProbe = { 1.579665719e-03, 1.093362615e-04, 3.288101479e-07 };
 

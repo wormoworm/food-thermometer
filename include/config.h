@@ -17,7 +17,7 @@
 
 // Divider resistor values, used to scale voltages into ADC range.
 #define DIVIDER_RESISTANCE_CHANNEL_1 99400
-#define DIVIDER_RESISTANCE_CHANNEL_2 99100
+#define DIVIDER_RESISTANCE_CHANNEL_2 98700
 
 // Minimum time between consecutive ADC samples. Some reports online suggest this can help with noise.
 #define MIN_ADC_SAMPLING_INTERVAL_MS 5
