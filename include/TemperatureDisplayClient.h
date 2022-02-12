@@ -22,11 +22,15 @@ class TemperatureDisplayClient {
 
         void displayOff();
 
+        void displayLoadingIndicator(uint8_t columns, boolean finalColumnActive);
+
         void displayTemperature(double temperature);
 
         void displayNoTemperature();
 
-        void displayCharacters(const char char1[3],const char char2[3],const char char3[3],const char char4[3]);
+        void displayCharacters(size_t nChars, const char char1[] = "82",const char char2[] = "82",const char char3[] = "82",const char char4[] = "82");
+
+        // void displayCharacters(const char chars[4][3], size_t nChars);
 
     private:
 

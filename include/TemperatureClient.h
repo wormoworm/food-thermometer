@@ -10,7 +10,7 @@
 class TemperatureClient {
 
     public:
-        TemperatureClient(uint8_t pinAdc, uint8_t pinPrescence, uint32_t dividerResistance, size_t smoothing);
+        TemperatureClient(adc1_channel_t adcChannel, uint8_t pinPrescence, uint32_t dividerResistance, size_t smoothing);
 
         void setConfig(TemperatureClientConfig config);
 
@@ -25,7 +25,7 @@ class TemperatureClient {
 
         float calculateTemperature(float resistance);
 
-        uint8_t _pinAdc;
+        adc1_channel_t _adcChannel;
         uint8_t _pinPrescence;
         uint32_t _dividerResistance;
         SmoothingBuffer _buffer;

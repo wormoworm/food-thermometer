@@ -5,12 +5,12 @@
 #define D10 17  // Not defined in pins_arduino.h
 #define D11 16  // Not defined in pins_arduino.h 
 #define PIN_BATTERY_VOLTAGE 36
-#define PIN_CHANNEL_1_VALUE 34
-#define PIN_CHANNEL_2_VALUE 39
 #define PIN_CHANNEL_1_PRESCENCE 16
 #define PIN_CHANNEL_2_PRESCENCE 17
 #define PIN_CHANNEL_SELECT_1 13
 #define PIN_CHANNEL_SELECT_2 14
+#define ADC_CHANNEL_CHANNEL_1_VALUE ADC1_CHANNEL_6
+#define ADC_CHANNEL_CHANNEL_2_VALUE ADC1_CHANNEL_3
 
 // I2C address of the 4-digit LED display.
 #define ADDRESS_DISPLAY 0x48
@@ -18,6 +18,9 @@
 // Divider resistor values, used to scale voltages into ADC range.
 #define DIVIDER_RESISTANCE_CHANNEL_1 99400
 #define DIVIDER_RESISTANCE_CHANNEL_2 98700
+
+//
+#define ADC_VREF_MV 3273
 
 // Minimum time between consecutive ADC samples. Some reports online suggest this can help with noise.
 #define MIN_ADC_SAMPLING_INTERVAL_MS 5

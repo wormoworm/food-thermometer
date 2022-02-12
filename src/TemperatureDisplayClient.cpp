@@ -5,6 +5,9 @@
 #include "TemperatureDisplayClient.h"
 #include "TemperatureClient.h"
 
+#define DISPLAY_LOADING_INDICATOR "-"
+#define DISPLAY_LOADING_INDICATOR_ACTIVE "-."
+
 TemperatureDisplayClient::TemperatureDisplayClient(uint8_t address) {
     _address = address;
     setConfig(TemperatureDisplayClientConfig { .precision = 1 });
@@ -23,6 +26,28 @@ boolean TemperatureDisplayClient::setConfig(TemperatureDisplayClientConfig confi
 
 void TemperatureDisplayClient::displayOff() {
     _display->displayOff();
+}
+
+void TemperatureDisplayClient::displayLoadingIndicator(uint8_t step, boolean finalColumnActive) {
+    char *indicator;
+    if (finalColumnActive) indicator = DISPLAY_LOADING_INDICATOR_ACTIVE;
+    else indicator = DISPLAY_LOADING_INDICATOR;
+    switch(step) {
+        case 1:
+            displayCharacters(1, indicator);
+            break;
+        case 2:
+            displayCharacters(2, DISPLAY_LOADING_INDICATOR, indicator);
+            break;
+        case 3:
+            displayCharacters(3, DISPLAY_LOADING_INDICATOR, DISPLAY_LOADING_INDICATOR, indicator);
+            break;
+        case 4:
+            displayCharacters(4, DISPLAY_LOADING_INDICATOR, DISPLAY_LOADING_INDICATOR, DISPLAY_LOADING_INDICATOR, indicator);
+            break;
+        default:
+            break;
+    }
 }
 
 void TemperatureDisplayClient::displayTemperature(double temperature) {
@@ -116,10 +141,44 @@ void TemperatureDisplayClient::displayNoTemperature() {
     _display->print4("-", "-", "-", "-");
 }
 
-void TemperatureDisplayClient::displayCharacters(const char char1[3],const char char2[3],const char char3[3],const char char4[3]) {
-    _display->setDisplayArea4(1, 2, 3, 4);
-    _display->print4(char1, char2, char3, char4);
+void TemperatureDisplayClient::displayCharacters(size_t nChars, const char char1[] = "82",const char char2[] = "82",const char char3[] = "82",const char char4[] = "82") {
+    switch (nChars) {
+        case 1:
+            _display->setDisplayArea4(1);
+            _display->print4(char1);
+            break;
+        case 2:
+            _display->setDisplayArea4(1, 2);
+            _display->print4(char1, char2);
+            break;
+        case 3:
+            _display->setDisplayArea4(1, 2, 3);
+            _display->print4(char1, char2, char3);
+            break;
+        case 4:
+            _display->setDisplayArea4(1, 2, 3, 4);
+            _display->print4(char1, char2, char3, char4);
+            break;
+        default:
+            break;
+    }
+    // _display->setDisplayArea4(1, 2, 3, 4);
+    // _display->print4(char1, char2, char3, char4);
 }
+
+// void TemperatureDisplayClient::displayCharacters(const char chars[4][3], size_t nChars) {
+//     switch (nChars) {
+//         case 1:
+//             _display->setDisplayArea4(1);
+//             _display->print4(chars[0]);
+//             break;
+//         default:
+//             break;
+//     }
+//     size_t n = sizeof(chars)/sizeof(chars[0]);
+//     Serial.print("Chars size: ");
+//     Serial.println(n);
+// }
 
 double TemperatureDisplayClient::formatTemperatureValue(double temperature) {
     return roundDouble(temperature, _config.precision);

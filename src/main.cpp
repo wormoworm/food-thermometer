@@ -39,8 +39,8 @@ WiFiClient espClient;
 SensorToolkitWifi *wifiClient;
 SensorToolkitMqtt mqttClient = SensorToolkitMqtt(espClient, CONFIG_MQTT_BROKER_ADDRESS, CONFIG_MQTT_BROKER_PORT, CONFIG_MQTT_CLIENT_ID);
 
-TemperatureClient temperatureChannel1 = TemperatureClient(PIN_CHANNEL_1_VALUE, PIN_CHANNEL_1_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_1, temperatureSmoothing);
-TemperatureClient temperatureChannel2 = TemperatureClient(PIN_CHANNEL_2_VALUE, PIN_CHANNEL_2_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_2, temperatureSmoothing);
+TemperatureClient temperatureChannel1 = TemperatureClient(ADC_CHANNEL_CHANNEL_1_VALUE, PIN_CHANNEL_1_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_1, temperatureSmoothing);
+TemperatureClient temperatureChannel2 = TemperatureClient(ADC_CHANNEL_CHANNEL_2_VALUE, PIN_CHANNEL_2_PRESCENCE, DIVIDER_RESISTANCE_CHANNEL_2, temperatureSmoothing);
 
 void flashLed() {
     digitalWrite(LED_BUILTIN, HIGH);
@@ -70,7 +70,7 @@ JsonObject decodeJsonObject(byte* payload, unsigned int length) {
 }
 
 void wifiConnectionTickCallback(uint16_t tickNumber) {
-    temperatureDisplayClient->displayCharacters(loadingCharacters[tickNumber % 4], loadingCharacters[(tickNumber + 1) % 4], loadingCharacters[(tickNumber + 2) % 4], loadingCharacters[(tickNumber + 3) % 4]);
+    temperatureDisplayClient->displayLoadingIndicator(1, tickNumber % 2 ==0);
 }
 
 /**
@@ -117,14 +117,18 @@ void setup() {
     wifiClient = new SensorToolkitWifi();
 
     // Connect to Wifi.
+    temperatureDisplayClient->displayLoadingIndicator(1, false);
     wifiClient->setConnectionTickCallback(wifiConnectionTickCallback);
     wifiClient->connectToWifi(WIFI_SSID, WIFI_PASSWORD, true);
     // Sync time from NTP server.
+    temperatureDisplayClient->displayLoadingIndicator(2, true);
     syncNtp(0, 3600, "pool.ntp.org", true);
     // Connect to MQTT.
+    temperatureDisplayClient->displayLoadingIndicator(3, true);
     mqttClient.setCallback(mqttSubscriptionCallback);
     mqttClient.connect(MQTT_USERNAME, MQTT_PASSWORD, CONFIG_MQTT_KEEP_ALIVE);
     subscribeToMqttTopics();
+    temperatureDisplayClient->displayOff();
 }
 
 void loop() {
