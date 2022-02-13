@@ -24,6 +24,10 @@ class TemperatureDisplayClient {
 
         void displayLoadingIndicator(uint8_t columns, boolean finalColumnActive);
 
+        unsigned long getLastUpdateTimestampMs();
+
+        boolean shouldUpdateScreen(uint32_t minReportingIntervalMs);
+
         void displayTemperature(double temperature);
 
         void displayNoTemperature();
@@ -38,6 +42,7 @@ class TemperatureDisplayClient {
         TemperatureDisplayClientConfig _config;
         DFRobot_LedDisplayModule *_display;
         char _displayString[MAX_DISPLAY_DIGITS+2];
+        unsigned long _lastUpdateTimestampMs = 0;
 
         uint8_t calculatePrecisionForValue(double temperature);
 

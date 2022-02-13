@@ -21,7 +21,7 @@ class DataReportingClient {
 
         SensorToolkitMqtt *_mqttClient;
 
-        char *_reportingTopic;
+        const char *_reportingTopic;
 
         char _jsonOutput[200];   // TODO: Should we be smarter about the size?
 

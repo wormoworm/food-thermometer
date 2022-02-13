@@ -12,6 +12,8 @@
 #define ADC_CHANNEL_CHANNEL_1_VALUE ADC1_CHANNEL_6
 #define ADC_CHANNEL_CHANNEL_2_VALUE ADC1_CHANNEL_3
 
+
+
 // I2C address of the 4-digit LED display.
 #define ADDRESS_DISPLAY 0x48
 
@@ -19,17 +21,30 @@
 #define DIVIDER_RESISTANCE_CHANNEL_1 99400
 #define DIVIDER_RESISTANCE_CHANNEL_2 98700
 
-//
+// ADC VREF (board-specific)
 #define ADC_VREF_MV 3273
 
+#define TEMPERATURE_SAMPLE_SIZE 50
+#define TEMPERATURE_SAMPLING_INTERVAL_MS 5
 // Minimum time between consecutive ADC samples. Some reports online suggest this can help with noise.
-#define MIN_ADC_SAMPLING_INTERVAL_MS 5
+#define MIN_ADC_SAMPLING_SEPARATION_MS 2
+
+// For static IP configuration on local LAN.
+#define CONFIG_WIFI_IP_ADDRESS_STRING "10.0.1.80"
+#define CONFIG_WIFI_GATEWAY_STRING "10.0.0.1"
+#define CONFIG_WIFI_SUBNET_STRING "255.255.252.0"
 
 // For MQTT broker connection.
 #define CONFIG_MQTT_BROKER_ADDRESS "10.0.1.2"
 #define CONFIG_MQTT_BROKER_PORT 8884
 #define CONFIG_MQTT_CLIENT_ID "foodthermometer1"
 #define CONFIG_MQTT_KEEP_ALIVE 10
+
+// Time between data publications to MQTT
+#define DATA_REPORTING_INTERVAL_MS 1000
+
+// Time between screen updates
+#define SCREEN_UPDATE_INTERVAL_MS 100
 
 // MQTT topics.
 #define TOPIC_BASE "sensors/environment/" CONFIG_MQTT_CLIENT_ID

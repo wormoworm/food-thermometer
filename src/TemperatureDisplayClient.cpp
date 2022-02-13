@@ -50,6 +50,14 @@ void TemperatureDisplayClient::displayLoadingIndicator(uint8_t step, boolean fin
     }
 }
 
+unsigned long TemperatureDisplayClient::getLastUpdateTimestampMs() {
+    return _lastUpdateTimestampMs;
+}
+
+boolean TemperatureDisplayClient::shouldUpdateScreen(uint32_t minReportingIntervalMs) {
+    return (millis() - _lastUpdateTimestampMs) > minReportingIntervalMs;
+}
+
 void TemperatureDisplayClient::displayTemperature(double temperature) {
     // Ensure the display is switched on.
     _display->displayOn();
@@ -133,6 +141,7 @@ void TemperatureDisplayClient::displayTemperature(double temperature) {
             break;
         }
     }
+    _lastUpdateTimestampMs = millis();
 }
 
 void TemperatureDisplayClient::displayNoTemperature() {
