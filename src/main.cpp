@@ -174,13 +174,13 @@ void loop() {
         }
     }
 
-    // 4: Publish data to each channel, if enough time has elapsed since the previous report.
-    // if (temperatureChannel1.isProbeConnected() && dataReportingClientChannel1->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
-    //     dataReportingClientChannel1->reportData(getEpochTime(), roundDouble(tempChannel1, 1));
-    // }
-    // if (temperatureChannel2.isProbeConnected() && dataReportingClientChannel2->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
-    //     dataReportingClientChannel2->reportData(getEpochTime(), roundDouble(tempChannel2, 1));
-    // }
+    // 4: Publish data to each channel, if enough time has elapsed since the previous report (per channel).
+    if (temperatureChannel1.isProbeConnected() && dataReportingClientChannel1->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
+        dataReportingClientChannel1->reportData(millis(), roundDouble(tempChannel1, 1));
+    }
+    if (temperatureChannel2.isProbeConnected() && dataReportingClientChannel2->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
+        dataReportingClientChannel2->reportData(millis(), roundDouble(tempChannel2, 1));
+    }
 
     // 5: Allow the MQTT client to perform any operations it needs to.
     mqttClient.loop();
