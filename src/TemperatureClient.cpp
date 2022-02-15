@@ -10,7 +10,7 @@ TemperatureClient::TemperatureClient(adc1_channel_t adcChannel, uint8_t pinPresc
     _adcChannel = adcChannel;
     _pinPrescence = pinPrescence;
     _dividerResistance = dividerResistance;
-    setConfig(TemperatureClientConfig { .c1 = 0.5821988606e-03, .c2 = 2.340232619e-04, .c3 = 0.7021977442e-07 });
+    setConfig(TemperatureClientConfig { .c1 = TEMPERATURE_CLIENT_CONFIG_C1_DEFAULT, .c2 = TEMPERATURE_CLIENT_CONFIG_C2_DEFAULT, .c3 = TEMPERATURE_CLIENT_CONFIG_C3_DEFAULT });
     pinMode(_pinPrescence, INPUT);
 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &_adc_chars);
@@ -47,9 +47,9 @@ float TemperatureClient::getSmoothedTemperature() {
     }
 }
 
-float correctResistance(float rawResistance) {
-    return (rawResistance * 0.9376) + 4737.4;
-}
+// float correctResistance(float rawResistance) {
+//     return (rawResistance * 0.9376) + 4737.4;
+// }
 
 /**
  * @brief Corrects the ADC voltage using a polynomial equation.

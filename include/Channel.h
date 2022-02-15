@@ -3,8 +3,8 @@
 
 enum Channel {
     NONE = 0,
-    ONE = 1,
-    TWO = 2
+    CHANNEL_1 = 1,
+    CHANNEL_2 = 2
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <Preferences.h>
 
+#include "Channel.h"
 #include "TemperatureClientConfig.h"
 
 #define STORAGE_KEY_SH_COEFFICIENTS_CHANNEL_1 "tempConfigCh1"
@@ -12,14 +13,16 @@ class Storage {
     public:
         Storage();
 
-        boolean putTemperatureClientConfig(TemperatureClientConfig config, uint8_t channel);
+        boolean hasTemperatureClientConfig(Channel channel);
 
-        const TemperatureClientConfig getTemperatureClientConfig(uint8_t channel);
+        boolean putTemperatureClientConfig(TemperatureClientConfig config, Channel channel);
+
+        const TemperatureClientConfig getTemperatureClientConfig(Channel channel);
 
     private:
         Preferences preferences;
 
-        const char* getTemperatureClientConfigKey(uint8_t channel);
+        const char* getTemperatureClientConfigKey(Channel channel);
 };
 
 #endif

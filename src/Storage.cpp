@@ -7,7 +7,11 @@ Storage::Storage() {
     preferences.begin("storage");
 }
 
-boolean Storage::putTemperatureClientConfig(TemperatureClientConfig config, uint8_t channel) {
+boolean Storage::hasTemperatureClientConfig(Channel channel) {
+    preferences.isKey(getTemperatureClientConfigKey(channel));
+}
+
+boolean Storage::putTemperatureClientConfig(TemperatureClientConfig config, Channel channel) {
     if (channel < 0 || channel > 1) return false;
     const char *key = getTemperatureClientConfigKey(channel);
     size_t valueSize = sizeof(TemperatureClientConfig);
@@ -16,7 +20,7 @@ boolean Storage::putTemperatureClientConfig(TemperatureClientConfig config, uint
     return preferences.putBytes(key, value, valueSize) != 0;
 }
 
-const TemperatureClientConfig Storage::getTemperatureClientConfig(uint8_t channel) {
+const TemperatureClientConfig Storage::getTemperatureClientConfig(Channel channel) {
     const char *key = getTemperatureClientConfigKey(channel);
     size_t valueSize = sizeof(TemperatureClientConfig);
     uint8_t bytes[valueSize];
@@ -28,11 +32,11 @@ const TemperatureClientConfig Storage::getTemperatureClientConfig(uint8_t channe
     return config;
 }
 
-const char* Storage::getTemperatureClientConfigKey(uint8_t channel) {
+const char* Storage::getTemperatureClientConfigKey(Channel channel) {
     switch (channel) {
-        case 1:
+        case CHANNEL_1:
             return STORAGE_KEY_SH_COEFFICIENTS_CHANNEL_1;
-        case 2:
+        case CHANNEL_2:
             return STORAGE_KEY_SH_COEFFICIENTS_CHANNEL_2;
         default:
             return "error";

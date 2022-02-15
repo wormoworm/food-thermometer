@@ -51,6 +51,17 @@ void flashLed() {
     digitalWrite(LED_BUILTIN, LOW);
 }
 
+void initialiseConfig() {
+    // Check if there is stored config for each channel, and load it if there is.
+    if (storage->hasTemperatureClientConfig(CHANNEL_1)) {
+        temperatureChannel1.setConfig(storage->getTemperatureClientConfig(CHANNEL_1));
+    }
+    if (storage->hasTemperatureClientConfig(CHANNEL_2)) {
+        Serial.println("Has config for channel 2");
+        temperatureChannel1.setConfig(storage->getTemperatureClientConfig(CHANNEL_2));
+    }
+}
+
 void handleCommandRequest(MqttCommandRequest commandRequest) {
     Serial.print("Handling command with type: ");
     Serial.println(commandRequest.type);
@@ -76,6 +87,35 @@ void wifiConnectionTickCallback(uint16_t tickNumber) {
     temperatureDisplayClient->displayLoadingIndicator(1, (tickNumber / 20) % 2 == 0);
 }
 
+boolean handleChannelConfig(Channel channel, JsonObject configJson) {
+    TemperatureClientConfig config = temperatureClientConfigFromJson(configJson["data"].as<JsonObject>());
+    Serial.print("Config c1: ");
+    Serial.println(config.c1);
+    if (storage->putTemperatureClientConfig(config, channel)) {
+        Serial.print("Config stored for channel ");
+        Serial.println(channel);
+        switch (channel) {
+            case CHANNEL_1:
+                temperatureChannel1.setConfig(config);
+                break;
+            case CHANNEL_2:
+                temperatureChannel2.setConfig(config);
+                break;
+            default:
+            case NONE:
+                break;
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+boolean matchesTopic(const char *string, const char *topic) {
+    return strcmp(string, topic) == 0;
+}
+
 /**
  * @brief Callback that is invoked whenever a message is received on a topic that the MQTT client is subscribed to.
  * 
@@ -96,8 +136,16 @@ void mqttSubscriptionCallback(char* topic, byte* payload, unsigned int length) {
     Serial.println("-----------------------");
 
     // What we do with the received message depends on the topic it arrived on.
-    if (strcmp(topic, TOPIC_COMMAND_REQUEST) == 0) {
+    if (matchesTopic(topic, TOPIC_COMMAND_REQUEST)) {       // Message is a command request
         handleCommandRequest(mqttCommandRequestFromJson(decodeJsonObject(payload, length)));
+    }
+    else if (matchesTopic(topic, TOPIC_CHANNEL_1_CONFIG)) {
+        handleChannelConfig(CHANNEL_1, decodeJsonObject(payload, length));
+    }
+    else if (matchesTopic(topic, TOPIC_CHANNEL_2_CONFIG)) {
+        Serial.print("Handling channel 2 config: ");
+        boolean result = handleChannelConfig(CHANNEL_2, decodeJsonObject(payload, length));
+        Serial.println(result);
     }
 }
 
@@ -142,6 +190,8 @@ void setup() {
     wifiClient = new SensorToolkitWifi();
     wifiClient->setConnectionTickCallback(wifiConnectionTickCallback);
     wifiClient->setIpConfig(CONFIG_WIFI_IP_ADDRESS, CONFIG_WIFI_GATEWAY, CONFIG_WIFI_SUBNET);
+
+    initialiseConfig();
 }
 
 void loop() {
@@ -162,10 +212,10 @@ void loop() {
     // 3: Display selected temperature on screen, if enough time has elapsed since the last update.
     if (temperatureDisplayClient->shouldUpdateScreen(SCREEN_UPDATE_INTERVAL_MS)) {
         switch (channelSelectClient->getSelectedChannel()) {
-            case ONE:
+            case CHANNEL_1:
                 temperatureDisplayClient->displayTemperature(tempChannel1);
                 break;
-            case TWO:
+            case CHANNEL_2:
                 temperatureDisplayClient->displayTemperature(tempChannel2);
                 break;
             default:

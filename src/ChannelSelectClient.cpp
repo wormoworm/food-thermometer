@@ -9,10 +9,10 @@ ChannelSelectClient::ChannelSelectClient(uint8_t pinChannel1, uint8_t pinChannel
 
 Channel ChannelSelectClient::getSelectedChannel() {
     if (digitalRead(_pinChannel1) == HIGH) {
-        return ONE;
+        return CHANNEL_1;
     }
     else if (digitalRead(_pinChannel2) == HIGH) {
-        return TWO;
+        return CHANNEL_2;
     }
     else {
         return NONE;
