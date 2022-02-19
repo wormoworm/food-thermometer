@@ -18,7 +18,7 @@
 #define ADDRESS_DISPLAY 0x48
 
 // Divider resistor values, used to scale voltages into ADC range.
-#define DIVIDER_RESISTANCE_CHANNEL_1 99400
+#define DIVIDER_RESISTANCE_CHANNEL_1 103200
 #define DIVIDER_RESISTANCE_CHANNEL_2 98700
 
 // ADC VREF (board-specific)
