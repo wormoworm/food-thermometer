@@ -22,6 +22,8 @@ boolean _1 = CONFIG_WIFI_IP_ADDRESS.fromString("10.0.1.80");
 boolean _2 = CONFIG_WIFI_GATEWAY.fromString("10.0.0.1");
 boolean _3 = CONFIG_WIFI_SUBNET.fromString("255.255.252.0");
 
+boolean temperatureProbeChannel1ConnectedPrevious, temperatureProbeChannel2ConnectedPrevious;
+
 // Base config. TODO: Some of this needs to be settable via MQTT.
 
 // SteinhartHartCoefficients shCoefficientsSalterProbe = { 1.579665719e-03, 1.093362615e-04, 3.288101479e-07 };
@@ -115,6 +117,10 @@ boolean matchesTopic(const char *string, const char *topic) {
     return strcmp(string, topic) == 0;
 }
 
+unsigned long getTimestampMs() {
+    return millis();
+}
+
 /**
  * @brief Callback that is invoked whenever a message is received on a topic that the MQTT client is subscribed to.
  * 
@@ -182,8 +188,8 @@ void setup() {
     storage = new Storage();
     channelSelectClient = new ChannelSelectClient(PIN_CHANNEL_SELECT_1, PIN_CHANNEL_SELECT_2);
     temperatureDisplayClient = new TemperatureDisplayClient(ADDRESS_DISPLAY);
-    dataReportingClientChannel1 = new DataReportingClient(mqttClient, TOPIC_CHANNEL_1_DATA);
-    dataReportingClientChannel2 = new DataReportingClient(mqttClient, TOPIC_CHANNEL_2_DATA);
+    dataReportingClientChannel1 = new DataReportingClient(mqttClient, TOPIC_CHANNEL_1_STATUS, TOPIC_CHANNEL_1_DATA);
+    dataReportingClientChannel2 = new DataReportingClient(mqttClient, TOPIC_CHANNEL_2_STATUS, TOPIC_CHANNEL_2_DATA);
 
     // Setup Wi-Fi.
     wifiClient = new SensorToolkitWifi();
@@ -196,7 +202,10 @@ void setup() {
 void loop() {
     if (!wifiClient->isConnected()) {
         connectToWiFi();
-    } 
+    }
+
+    unsigned long timestampMs = getTimestampMs();
+
     // 1: Delay by sampling interval (minus the min ADC sampling interval - see below for why).
     delay(max(TEMPERATURE_SAMPLING_INTERVAL_MS - MIN_ADC_SAMPLING_SEPARATION_MS, 0));
 
@@ -223,14 +232,27 @@ void loop() {
         }
     }
 
+    boolean temperatureProbeChannel1Connected = temperatureChannel1.isProbeConnected();
+    boolean temperatureProbeChannel2Connected = temperatureChannel2.isProbeConnected();
+
     // 4: Publish data to each channel, if enough time has elapsed since the previous report (per channel).
-    if (temperatureChannel1.isProbeConnected() && dataReportingClientChannel1->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
-        dataReportingClientChannel1->reportData(millis(), roundDouble(tempChannel1, 1));
+    if (temperatureProbeChannel1Connected && dataReportingClientChannel1->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
+        dataReportingClientChannel1->reportData(timestampMs, roundDouble(tempChannel1, 1));
     }
-    if (temperatureChannel2.isProbeConnected() && dataReportingClientChannel2->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
-        dataReportingClientChannel2->reportData(millis(), roundDouble(tempChannel2, 1));
+    if (temperatureProbeChannel2Connected && dataReportingClientChannel2->shouldReportData(DATA_REPORTING_INTERVAL_MS)) {
+        dataReportingClientChannel2->reportData(timestampMs, roundDouble(tempChannel2, 1));
     }
 
-    // 5: Allow the MQTT client to perform any operations it needs to.
+    // 5: Publish probe states, if necessary
+    if (temperatureProbeChannel1Connected != temperatureProbeChannel1ConnectedPrevious) {
+        dataReportingClientChannel1->reportStatus(timestampMs, temperatureProbeChannel1Connected);
+        temperatureProbeChannel1ConnectedPrevious = temperatureProbeChannel1Connected;
+    }
+    if (temperatureProbeChannel2Connected != temperatureProbeChannel2ConnectedPrevious) {
+        dataReportingClientChannel2->reportStatus(timestampMs, temperatureProbeChannel2Connected);
+        temperatureProbeChannel2ConnectedPrevious = temperatureProbeChannel2Connected;
+    }
+
+    // 6: Allow the MQTT client to perform any operations it needs to.
     mqttClient.loop();
 }
