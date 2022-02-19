@@ -12,14 +12,14 @@ DataReportingClient::DataReportingClient(SensorToolkitMqtt& mqttClient, const ch
 
 boolean DataReportingClient::reportStatus(unsigned long timestamp, boolean probeConnected) {
     StaticJsonDocument<200> json;
-    
+
     json["timestamp"] = timestamp;
     json["probeConnected"] = probeConnected;
 
     serializeJson(json, _jsonOutput);
     
     // Publish the status.
-    return _mqttClient->publish(_statusReportingTopic, _jsonOutput);
+    return _mqttClient->publish(_statusReportingTopic, _jsonOutput, true);
 }
 
 unsigned long DataReportingClient::getLastDataReportTimestampMs() {
@@ -39,7 +39,7 @@ boolean DataReportingClient::reportData(unsigned long timestamp, double temperat
     serializeJson(json, _jsonOutput);
     
     // Publish the data and update the publish time if successful.
-    boolean status = _mqttClient->publish(_dataReportingTopic, _jsonOutput);
+    boolean status = _mqttClient->publish(_dataReportingTopic, _jsonOutput, true);
     if (status) _lastReportTimestampMs = millis();
     return status;
 }
