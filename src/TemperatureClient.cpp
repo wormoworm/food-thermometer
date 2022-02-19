@@ -47,10 +47,6 @@ float TemperatureClient::getSmoothedTemperature() {
     }
 }
 
-// float correctResistance(float rawResistance) {
-//     return (rawResistance * 0.9376) + 4737.4;
-// }
-
 /**
  * @brief Corrects the ADC voltage using a polynomial equation.
  * This equation was derived by plotting voltage values (already corrected by the built-in ESP function esp_adc_cal_raw_to_voltage) against measurements taken using a DMM.

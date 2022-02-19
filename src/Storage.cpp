@@ -8,11 +8,11 @@ Storage::Storage() {
 }
 
 boolean Storage::hasTemperatureClientConfig(Channel channel) {
-    preferences.isKey(getTemperatureClientConfigKey(channel));
+    return preferences.isKey(getTemperatureClientConfigKey(channel));
 }
 
 boolean Storage::putTemperatureClientConfig(TemperatureClientConfig config, Channel channel) {
-    if (channel < 0 || channel > 1) return false;
+    if (channel < 1 || channel > 2) return false;
     const char *key = getTemperatureClientConfigKey(channel);
     size_t valueSize = sizeof(TemperatureClientConfig);
     uint8_t value[valueSize];
@@ -27,8 +27,6 @@ const TemperatureClientConfig Storage::getTemperatureClientConfig(Channel channe
     preferences.getBytes(key, bytes, valueSize);
     TemperatureClientConfig config;
     memcpy(&config, bytes, valueSize);
-    Serial.print("Key: ");
-    Serial.println(key);
     return config;
 }
 

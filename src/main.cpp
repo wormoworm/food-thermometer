@@ -57,8 +57,7 @@ void initialiseConfig() {
         temperatureChannel1.setConfig(storage->getTemperatureClientConfig(CHANNEL_1));
     }
     if (storage->hasTemperatureClientConfig(CHANNEL_2)) {
-        Serial.println("Has config for channel 2");
-        temperatureChannel1.setConfig(storage->getTemperatureClientConfig(CHANNEL_2));
+        temperatureChannel2.setConfig(storage->getTemperatureClientConfig(CHANNEL_2));
     }
 }
 
@@ -89,8 +88,6 @@ void wifiConnectionTickCallback(uint16_t tickNumber) {
 
 boolean handleChannelConfig(Channel channel, JsonObject configJson) {
     TemperatureClientConfig config = temperatureClientConfigFromJson(configJson["data"].as<JsonObject>());
-    Serial.print("Config c1: ");
-    Serial.println(config.c1);
     if (storage->putTemperatureClientConfig(config, channel)) {
         Serial.print("Config stored for channel ");
         Serial.println(channel);
@@ -108,6 +105,8 @@ boolean handleChannelConfig(Channel channel, JsonObject configJson) {
         return true;
     }
     else {
+        Serial.print("Config not stored for channel ");
+        Serial.println(channel);
         return false;
     }
 }
@@ -143,7 +142,7 @@ void mqttSubscriptionCallback(char* topic, byte* payload, unsigned int length) {
         handleChannelConfig(CHANNEL_1, decodeJsonObject(payload, length));
     }
     else if (matchesTopic(topic, TOPIC_CHANNEL_2_CONFIG)) {
-        Serial.print("Handling channel 2 config: ");
+        Serial.println("Handling channel 2 config: ");
         boolean result = handleChannelConfig(CHANNEL_2, decodeJsonObject(payload, length));
         Serial.println(result);
     }

@@ -24,11 +24,9 @@ boolean DataReportingClient::reportData(unsigned long timestamp, double temperat
     json["timestamp"] = timestamp;
     json["temperature"] = temperature;
 
-    serializeJsonPretty(json, Serial);
-    Serial.println();
     serializeJson(json, _jsonOutput);
     
-    // Publish the dataand update the publish time if successful.
+    // Publish the data and update the publish time if successful.
     boolean status = _mqttClient->publish(_reportingTopic, _jsonOutput);
     if (status) _lastReportTimestampMs = millis();
     return status;
