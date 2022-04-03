@@ -13,7 +13,7 @@
 #include "ChannelSelectClient.h"
 #include "TemperatureDisplayClient.h"
 #include "DataReportingClient.h"
-#include "MathUtils.h"
+#include "SensorToolkitMathUtils.h"
 
 const char loadingCharacters[4][3] = {"1", "-", "-", "-"};
 
